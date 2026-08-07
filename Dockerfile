@@ -18,6 +18,8 @@ RUN git clone --depth 1 https://github.com/davidmatthews/handbrake-presets.git /
     && rm -rf /tmp/handbrake-presets
 
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY scripts/ /usr/local/lib/video-toolkit/
+
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/lib/video-toolkit/*
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
