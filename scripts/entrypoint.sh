@@ -20,7 +20,7 @@ shift
 
 case "$command_name" in
     mkv-clean|bitrate-rename|sample-encode|encode-aac|encode-eac3)
-        exec "/usr/local/lib/video-toolkit/$command_name" "$@"
+        exec "/usr/local/lib/video-toolkit/$command_name.sh" "$@"
         ;;
     *)
         echo "Unknown command: $command_name" >&2
