@@ -80,12 +80,16 @@ total_bits=0
 total_sampled_seconds=0
 sample_count=0
 start_seconds=0
+TOTAL_SAMPLES=$(awk -v duration="$DURATION" -v interval="$SAMPLE_INTERVAL_SECONDS" \
+    'BEGIN { print int((duration + interval - 0.000001) / interval) }')
+
+echo "Total samples: ${TOTAL_SAMPLES}"
 
 while awk -v start="$start_seconds" -v duration="$DURATION" \
     'BEGIN { exit !(start < duration) }'; do
     sample_file="$SAMPLE_DIR/sample-${sample_count}.mkv"
 
-    echo "Encoding sample $((sample_count + 1)) at ${start_seconds}s..."
+    echo "Encoding sample $((sample_count + 1))/${TOTAL_SAMPLES} at ${start_seconds}s..."
     # Explicitly disable these streams because the presets are intended for
     # normal encodes and may otherwise passthrough their configured tracks.
     handbrake_log="$SAMPLE_DIR/handbrake-${sample_count}.log"
@@ -98,7 +102,30 @@ while awk -v start="$start_seconds" -v duration="$DURATION" \
             --subtitle none \
             --start-at "duration:${start_seconds}" \
             --stop-at "duration:${SAMPLE_DURATION_SECONDS}" \
-            --verbose=0 >"$handbrake_log" 2>&1; then
+            --verbose=0 2>&1 | tee "$handbrake_log" | awk -v RS='\r' \
+            -v sample="$((sample_count + 1))" -v total="$TOTAL_SAMPLES" '
+                BEGIN { last_bucket = -1 }
+
+                /Encoding: task [0-9]+ of [0-9]+,/ {
+                    progress = $0
+                    sub(/^.*Encoding: task [0-9]+ of [0-9]+, /, "", progress)
+                    sub(/ %.*/, "", progress)
+
+                    fps = $0
+                    sub(/^.*% \(/, "", fps)
+                    sub(/ fps.*/, "", fps)
+
+                    # HandBrake writes progress with carriage returns. Emit
+                    # one readable line per 5% bucket instead of relying on
+                    # terminal carriage-return rendering.
+                    bucket = int(progress / 5)
+                    if (bucket > last_bucket || progress >= 99.9) {
+                        printf "Encoding sample %d/%d: %s%% (%s fps)\n", sample, total, progress, fps
+                        last_bucket = bucket
+                    }
+                }
+                END { fflush() }
+            '; then
         echo "HandBrake failed while encoding sample at ${start_seconds}s:" >&2
         cat "$handbrake_log" >&2
         exit 1
