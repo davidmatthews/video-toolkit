@@ -4,8 +4,8 @@ A Docker image containing small command-line tools for working with video files.
 
 ## Status
 
-`bitrate-rename`, `encode-aac`, and `encode-eac3` are implemented. The remaining
-commands are placeholders and are not ready for use yet.
+`bitrate-rename`, `mkv-clean`, `encode-aac`, and `encode-eac3` are implemented.
+`sample-encode` is still a placeholder.
 
 ## Getting started
 
@@ -76,11 +76,24 @@ one through eight channels respectively. Video and subtitle streams are copied.
 Output defaults to a sibling directory named `<input> (EAC3)`. It also supports
 `--dry-run` and `--output-dir <folder>`.
 
+### `mkv-clean`
+
+Cleans a HandBrake-produced MKV by removing attachments, the container title,
+global tags, and track tags. It also removes HandBrake-generated audio mixdown
+titles while preserving other track metadata, subtitles, and chapters. The
+output is written beside the input with an uppercase `RF` suffix and trailing
+RF decimal zeroes removed. The input is left unchanged, and an existing output
+path is never overwritten:
+
+```bash
+docker run --rm -v "$PWD:/media" video-toolkit \
+  mkv-clean /media/video-rf20.00.mkv
+```
+
 ### Planned commands
 
-The following commands are exposed by the image but currently contain TODOs:
+The following command is exposed by the image but currently contains a TODO:
 
-- `mkv-clean`
 - `sample-encode`
 
 ## Requirements
