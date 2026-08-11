@@ -4,8 +4,8 @@ A Docker image containing small command-line tools for working with video files.
 
 ## Status
 
-`bitrate-rename` is currently implemented. The other commands are placeholders and
-are not ready for use yet.
+`bitrate-rename`, `encode-aac`, and `encode-eac3` are implemented. The remaining
+commands are placeholders and are not ready for use yet.
 
 ## Getting started
 
@@ -54,14 +54,34 @@ docker run --rm -v "$PWD:/media" video-toolkit \
 Files that already end in `-<number>kbps`, or whose destination filename
 already exists, are skipped.
 
+### `encode-aac`
+
+Encodes the first audio track in each supported video file as stereo AAC at
+192 kbps, while copying video and subtitle streams. Output defaults to a
+sibling directory named `<input> (AAC)`.
+
+Use `--dry-run` to preview work, or `--output-dir <folder>` to choose the
+destination directory:
+
+```bash
+docker run --rm -v "$PWD:/media" video-toolkit \
+  encode-aac /media --output-dir /media/aac --dry-run
+```
+
+### `encode-eac3`
+
+Encodes only the first audio track as E-AC-3. Its bitrate is selected from the
+track's channel count: 96k, 192k, 320k, 384k, 448k, 640k, 768k, or 1024k for
+one through eight channels respectively. Video and subtitle streams are copied.
+Output defaults to a sibling directory named `<input> (EAC3)`. It also supports
+`--dry-run` and `--output-dir <folder>`.
+
 ### Planned commands
 
 The following commands are exposed by the image but currently contain TODOs:
 
 - `mkv-clean`
 - `sample-encode`
-- `encode-aac`
-- `encode-eac3`
 
 ## Requirements
 
