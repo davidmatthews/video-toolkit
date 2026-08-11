@@ -5,7 +5,7 @@ A Docker image containing small command-line tools for working with video files.
 ## Status
 
 `bitrate-rename`, `mkv-clean`, `encode-aac`, and `encode-eac3` are implemented.
-`sample-encode` is still a placeholder.
+`sample-encode` is implemented.
 
 ## Getting started
 
@@ -90,11 +90,19 @@ docker run --rm -v "$PWD:/media" video-toolkit \
   mkv-clean /media/video-rf20.00.mkv
 ```
 
-### Planned commands
+### `sample-encode`
 
-The following command is exposed by the image but currently contains a TODO:
+Encodes short video-only samples with the resolution-appropriate HandBrake
+preset and estimates the resulting average video bitrate. Samples default to
+10 seconds every 5 minutes and are deleted automatically after measurement.
+The optional `animation` argument selects the animation preset.
 
-- `sample-encode`
+```bash
+docker run --rm -v "$PWD:/media" video-toolkit \
+  sample-encode /media/video.mkv 20 animation
+```
+
+Omit `animation` to use the live-action preset.
 
 ## Requirements
 
