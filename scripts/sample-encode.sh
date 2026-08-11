@@ -88,16 +88,21 @@ while awk -v start="$start_seconds" -v duration="$DURATION" \
     echo "Encoding sample $((sample_count + 1)) at ${start_seconds}s..."
     # Explicitly disable these streams because the presets are intended for
     # normal encodes and may otherwise passthrough their configured tracks.
-    HandBrakeCLI \
-        --input "$SOURCE" \
-        --output "$sample_file" \
-        --preset-import-file "$PRESET_FILE" \
-        --preset "$PRESET" \
-        --audio none \
-        --subtitle none \
-        --start-at "duration:${start_seconds}" \
-        --stop-at "duration:${SAMPLE_DURATION_SECONDS}" \
-        --verbose=0
+    handbrake_log="$SAMPLE_DIR/handbrake-${sample_count}.log"
+    if ! HandBrakeCLI \
+            --input "$SOURCE" \
+            --output "$sample_file" \
+            --preset-import-file "$PRESET_FILE" \
+            --preset "$PRESET" \
+            --audio none \
+            --subtitle none \
+            --start-at "duration:${start_seconds}" \
+            --stop-at "duration:${SAMPLE_DURATION_SECONDS}" \
+            --verbose=0 >"$handbrake_log" 2>&1; then
+        echo "HandBrake failed while encoding sample at ${start_seconds}s:" >&2
+        cat "$handbrake_log" >&2
+        exit 1
+    fi
 
     sample_seconds=$(ffprobe -v error -show_entries format=duration \
         -of default=nk=1:nw=1 "$sample_file")
