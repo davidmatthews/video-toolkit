@@ -10,7 +10,11 @@ WORKSPACE=${2:?workspace required}
 setup_workspace "$WORKSPACE"
 mkdir -p -- "$WORKSPACE/input"
 copy_asset "$SCRIPT_DIR/assets/test-video-1080p-sdr.mkv" "$WORKSPACE/input/video-source.mkv"
-copy_asset "$SCRIPT_DIR/assets/test-global-tags.xml" "$WORKSPACE/tags.xml"
+
+# Generate the tiny global-tags input in the isolated workspace so the test
+# does not depend on an ignored auxiliary file being present in a checkout.
+run_binary "$IMAGE" "$WORKSPACE" bash -c \
+  'printf "%s\\n" "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" "<Tags>" "  <Tag>" "    <Targets />" "    <Simple>" "      <Name>TEST_GLOBAL_TAG</Name>" "      <String>must be removed</String>" "    </Simple>" "  </Tag>" "</Tags>" > /media/tags.xml'
 
 # Build the HandBrake-like input inside the image so the test exercises real
 # Matroska tags and track names, rather than merely checking the output name.
