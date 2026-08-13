@@ -18,3 +18,8 @@
 
 - Run the relevant syntax checks and tests after making changes.
 - For shell scripts, at minimum run `bash -n` on each modified script.
+
+## Testing changes
+
+- Always add an appropriate test for new functionality, or update the existing
+  tests to account for changes in functionality.

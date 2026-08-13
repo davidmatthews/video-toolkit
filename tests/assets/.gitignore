@@ -1,0 +1,4 @@
+# Generated video inputs are created by generate-test-assets.sh and should not
+# be committed to the repository.
+*.mkv
+*.mp4
