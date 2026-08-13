@@ -10,14 +10,26 @@ IMAGE=${1:?image name required}
 WORKSPACE=${2:?workspace required}
 setup_workspace "$WORKSPACE"
 mkdir -p -- "$WORKSPACE/input"
-# Use a real video stream so MediaInfo can calculate a bitrate without the
-# higher cost of the 4K fixture.
-copy_asset "$SCRIPT_DIR/assets/test-video-1080p-sdr.mkv" "$WORKSPACE/input/video.mkv"
+copy_asset "$SCRIPT_DIR/assets/test-video-1080p-sdr-old.mkv" "$WORKSPACE/input/video-1080p.mkv"
+copy_asset "$SCRIPT_DIR/assets/test-video-4k-hdr10-old.mkv" "$WORKSPACE/input/video-4k.mkv"
 
-# Dry-run exercises discovery, dependency availability, and filename handling
-# without making the test depend on an encoder's exact bitrate.
-run_tool "$IMAGE" "$WORKSPACE" bitrate-rename /media/input --dry-run
-# A dry-run must leave the source at its original path.
-test -f "$WORKSPACE/input/video.mkv"
+initial_1080_bitrate=$(run_binary "$IMAGE" "$WORKSPACE" mediainfo --Inform='Video;%BitRate%' /media/input/video-1080p.mkv)
+initial_4k_bitrate=$(run_binary "$IMAGE" "$WORKSPACE" mediainfo --Inform='Video;%BitRate%' /media/input/video-4k.mkv)
+test -z "$initial_1080_bitrate"
+test "$initial_4k_bitrate" -gt 0
 
-echo "bitrate-rename smoke test passed."
+# The old 1080p fixture has no stored video bitrate. Add Matroska per-track
+# statistics with mkvtoolnix, matching the repair path used before renaming.
+run_binary "$IMAGE" "$WORKSPACE" mkvpropedit \
+  --add-track-statistics-tags /media/input/video-1080p.mkv
+
+bitrate_1080=$(run_binary "$IMAGE" "$WORKSPACE" mediainfo --Inform='Video;%BitRate%' /media/input/video-1080p.mkv)
+test "$bitrate_1080" -gt 0
+expected_1080_kbps=$(((bitrate_1080 + 500) / 1000))
+expected_4k_kbps=$(((initial_4k_bitrate + 500) / 1000))
+
+run_tool "$IMAGE" "$WORKSPACE" bitrate-rename /media/input
+test -f "$WORKSPACE/input/video-1080p-${expected_1080_kbps}kbps.mkv"
+test -f "$WORKSPACE/input/video-4k-${expected_4k_kbps}kbps.mkv"
+
+echo "bitrate-rename test passed."

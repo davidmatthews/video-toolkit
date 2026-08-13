@@ -22,6 +22,17 @@ run_tool() {
   docker run --rm -v "$workspace:/media" "$image" "$@"
 }
 
+run_binary() {
+  local image=$1
+  local workspace=$2
+  local binary=$3
+  shift 3
+
+  # Run image-provided media utilities directly when a test needs to derive a
+  # fixture before invoking the toolkit command under test.
+  docker run --rm -v "$workspace:/media" --entrypoint "$binary" "$image" "$@"
+}
+
 copy_asset() {
   local source=$1
   local destination=$2
