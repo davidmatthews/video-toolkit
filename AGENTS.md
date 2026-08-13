@@ -19,7 +19,11 @@
 - Run the relevant syntax checks and tests after making changes.
 - For shell scripts, at minimum run `bash -n` on each modified script.
 
-## Testing changes
+## Testing
 
 - Always add an appropriate test for new functionality, or update the existing
   tests to account for changes in functionality.
+- Perform tests using the generated assets in `tests/assets` as the standard
+  inputs.
+- If a test requires a derived video or other input, have that test script
+  generate its own derivation from an asset in `tests/assets`.
