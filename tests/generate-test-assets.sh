@@ -8,7 +8,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 PROJECT_DIR=$(cd -- "$SCRIPT_DIR/.." && pwd -P)
 OUTPUT_DIR="$SCRIPT_DIR/assets"
 FORCE=false
-IMAGE=${VIDEO_TOOLKIT_TEST_IMAGE:-video-toolkit:test}
+IMAGE=${VIDEO_TOOLKIT_TEST_IMAGE:-video-toolkit:latest}
 IN_CONTAINER=false
 
 usage() {

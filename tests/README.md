@@ -9,7 +9,7 @@ Build the image first, then run the complete Docker-backed smoke suite from the
 repository root:
 
 ```bash
-docker build --tag video-toolkit:test .
+docker build --tag video-toolkit:latest .
 ./tests/run-tests.sh
 ```
 
