@@ -70,6 +70,7 @@ if [[ $IN_CONTAINER == false ]]; then
     container_args+=(--force)
   fi
   docker run --rm \
+    --user "$(id -u):$(id -g)" \
     --entrypoint /bin/bash \
     -v "$PROJECT_DIR:/workspace" \
     -v "$OUTPUT_DIR:/output" \

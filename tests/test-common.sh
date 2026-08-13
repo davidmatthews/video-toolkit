@@ -17,9 +17,9 @@ run_tool() {
   local workspace=$2
   shift 2
 
-  # Running through the image entrypoint checks installed dependencies and
-  # command dispatch, not just the host-side scripts.
-  docker run --rm -v "$workspace:/media" "$image" "$@"
+  # Match the bind-mounted output ownership to the caller so the host-side
+  # cleanup trap can remove files created by the container.
+  docker run --rm --user "$(id -u):$(id -g)" -v "$workspace:/media" "$image" "$@"
 }
 
 run_binary() {
@@ -30,7 +30,8 @@ run_binary() {
 
   # Run image-provided media utilities directly when a test needs to derive a
   # fixture before invoking the toolkit command under test.
-  docker run --rm -v "$workspace:/media" --entrypoint "$binary" "$image" "$@"
+  docker run --rm --user "$(id -u):$(id -g)" -v "$workspace:/media" \
+    --entrypoint "$binary" "$image" "$@"
 }
 
 copy_asset() {
