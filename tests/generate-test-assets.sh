@@ -5,15 +5,22 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+PROJECT_DIR=$(cd -- "$SCRIPT_DIR/.." && pwd -P)
 OUTPUT_DIR="$SCRIPT_DIR/assets"
 FORCE=false
+IMAGE=${VIDEO_TOOLKIT_TEST_IMAGE:-video-toolkit:test}
+IN_CONTAINER=false
 
 usage() {
-  echo "Usage: $0 [--output-dir <folder>] [--force]" >&2
+  echo "Usage: $0 [--output-dir <folder>] [--force] [--image <image>] [--in-container]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --help|-h)
+      usage
+      exit 0
+      ;;
     --output-dir)
       if [[ $# -lt 2 ]]; then
         echo "Error: --output-dir requires a folder." >&2
@@ -27,6 +34,19 @@ while [[ $# -gt 0 ]]; do
       FORCE=true
       shift
       ;;
+    --image)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --image requires an image name." >&2
+        usage
+        exit 1
+      fi
+      IMAGE=$2
+      shift 2
+      ;;
+    --in-container)
+      IN_CONTAINER=true
+      shift
+      ;;
     *)
       echo "Error: unknown option '$1'." >&2
       usage
@@ -34,6 +54,30 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Keep media generation reproducible with the same ffmpeg build and codecs as
+# the application. The --in-container path is deliberately explicit so this
+# script cannot accidentally recurse when it is invoked by the container.
+if [[ $IN_CONTAINER == false ]]; then
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Error: docker is required to generate test assets." >&2
+    exit 1
+  fi
+
+  mkdir -p -- "$OUTPUT_DIR"
+  container_args=(--in-container --output-dir /output)
+  if [[ $FORCE == true ]]; then
+    container_args+=(--force)
+  fi
+  docker run --rm \
+    --entrypoint /bin/bash \
+    -v "$PROJECT_DIR:/workspace" \
+    -v "$OUTPUT_DIR:/output" \
+    -w /workspace \
+    "$IMAGE" \
+    /workspace/tests/generate-test-assets.sh "${container_args[@]}"
+  exit $?
+fi
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
   echo "Error: ffmpeg is required but was not found in PATH." >&2
