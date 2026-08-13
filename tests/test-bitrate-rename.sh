@@ -10,8 +10,8 @@ IMAGE=${1:?image name required}
 WORKSPACE=${2:?workspace required}
 setup_workspace "$WORKSPACE"
 mkdir -p -- "$WORKSPACE/input"
-copy_asset "$SCRIPT_DIR/assets/test-video-1080p-sdr-old.mkv" "$WORKSPACE/input/video-1080p.mkv"
-copy_asset "$SCRIPT_DIR/assets/test-video-4k-hdr10-old.mkv" "$WORKSPACE/input/video-4k.mkv"
+copy_asset "$SCRIPT_DIR/assets/test-video-1080p-sdr.mkv" "$WORKSPACE/input/video-1080p.mkv"
+copy_asset "$SCRIPT_DIR/assets/test-video-4k-hdr10.mkv" "$WORKSPACE/input/video-4k.mkv"
 
 initial_1080_bitrate=$(run_binary "$IMAGE" "$WORKSPACE" mediainfo --Inform='Video;%BitRate%' /media/input/video-1080p.mkv)
 initial_4k_bitrate=$(run_binary "$IMAGE" "$WORKSPACE" mediainfo --Inform='Video;%BitRate%' /media/input/video-4k.mkv)
