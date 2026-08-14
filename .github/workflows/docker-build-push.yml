@@ -3,7 +3,8 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - main
+      - '**'
+  pull_request:
 
 permissions:
   contents: read
@@ -17,7 +18,7 @@ env:
 
 jobs:
   build:
-    name: Build and push ${{ matrix.arch }} image
+    name: Build and test ${{ matrix.arch }} image
     strategy:
       matrix:
         include:
@@ -36,31 +37,44 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Determine immutable image tag
         id: image
         env:
           ARCH: ${{ matrix.arch }}
         run: echo "tag=${IMAGE}:${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${ARCH}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push architecture image
+      - name: Build architecture image
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
-          push: true
+          load: true
           tags: ${{ steps.image.outputs.tag }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
+      - name: Run test suite
+        env:
+          VIDEO_TOOLKIT_TEST_IMAGE: ${{ steps.image.outputs.tag }}
+        run: ./tests/run-tests.sh
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push tested architecture image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+        run: docker push "$IMAGE_TAG"
+
   manifest:
     name: Publish latest multi-architecture image
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
 
     steps:

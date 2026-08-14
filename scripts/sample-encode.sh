@@ -98,6 +98,7 @@ while awk -v start="$start_seconds" -v duration="$DURATION" \
             --output "$sample_file" \
             --preset-import-file "$PRESET_FILE" \
             --preset "$PRESET" \
+            --quality "$CRF" \
             --audio none \
             --subtitle none \
             --start-at "duration:${start_seconds}" \
@@ -139,6 +140,9 @@ while awk -v start="$start_seconds" -v duration="$DURATION" \
         echo "Could not determine encoded sample size or duration" >&2
         exit 1
     fi
+
+    sample_media_info=$(mediainfo --Inform='Video;%Width%x%Height%|%HDR_Format%|%Encoded_Library_Settings%' "$sample_file")
+    echo "Sample MediaInfo: ${sample_media_info}"
 
     sample_bitrate=$(awk -v bytes="$sample_bytes" -v seconds="$sample_seconds" \
         'BEGIN { printf "%.0f", bytes * 8 / seconds / 1000 }')
