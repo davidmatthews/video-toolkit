@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor and IDE metadata
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local environment and tooling caches
+.env
+.env.*
+!.env.example
+.cache/
+__pycache__/
+*.py[cod]
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Common generated video-tool output
+*.partial
+*.part
+
