@@ -4,12 +4,14 @@
 # Other daily builds are only retained for 14 days and could break a later rebuild.
 ARG FFMPEG_BUILD=8.1.2-34-g9b6c8969e0
 ARG FFMPEG_RELEASE=autobuild-2026-07-31-14-10
+ARG MKVTOOLNIX_VERSION=100.0-0~ubuntu2404bunkus01
 
 FROM davidmatthews/handbrake-cli:latest
 
 ARG TARGETARCH
 ARG FFMPEG_BUILD
 ARG FFMPEG_RELEASE
+ARG MKVTOOLNIX_VERSION
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
@@ -17,11 +19,23 @@ RUN apt-get update \
         curl \
         git \
         mediainfo \
-        mkvtoolnix \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install BtbN's GPL FFmpeg build
+# Download and install mkvtoolnix
+RUN set -eux; \
+    mkdir --parents /etc/apt/keyrings; \
+    curl --fail --location --show-error --silent \
+        --output /etc/apt/keyrings/gpg-pub-moritzbunkus.gpg \
+        https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg; \
+    echo "deb [arch=${TARGETARCH} signed-by=/etc/apt/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ noble main" \
+        > /etc/apt/sources.list.d/mkvtoolnix.download.list; \
+    apt-get update; \
+    apt-get install --yes --no-install-recommends "mkvtoolnix=${MKVTOOLNIX_VERSION}"; \
+    test "$(mkvmerge --version | sed -n 's/^mkvmerge v\([^ ]*\).*/\1/p')" = "${MKVTOOLNIX_VERSION%%-*}"; \
+    rm -rf /var/lib/apt/lists/*
+
+# Download and install BtbN's GPL FFmpeg build.
 RUN set -eux; \
     case "$TARGETARCH" in \
         amd64) \
